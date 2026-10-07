@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+if command -v exiftool >/dev/null 2>&1; then
+    find assets -name '*.png' -size +0c -print0 | xargs -0 -r exiftool -q -overwrite_original \
+        -Artist=z1rov -XMP-dc:creator=z1rov -Copyright="2026 z1rov"
+    echo "stamped PNGs with exiftool (Author=z1rov)"
+elif python3 -c 'import PIL' >/dev/null 2>&1; then
+    python3 - <<'PY'
+import glob, os
+from PIL import Image, PngImagePlugin
+for p in glob.glob('assets/**/*.png', recursive=True):
+    if os.path.getsize(p) == 0:
+        continue
+    try:
+        im = Image.open(p); im.load()
+    except Exception as e:
+        print('skip', p, e); continue
+    meta = PngImagePlugin.PngInfo()
+    meta.add_text('Author', 'z1rov')
+    meta.add_text('Copyright', '2026 z1rov')
+    im.save(p, pnginfo=meta)
+    print('stamped', p)
+PY
+else
+    echo "need exiftool or python3-pil: sudo apt install -y libimage-exiftool-perl" >&2
+    exit 1
+fi

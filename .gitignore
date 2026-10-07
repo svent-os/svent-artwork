@@ -1,0 +1,11 @@
+*.deb
+*.buildinfo
+*.changes
+*.asc
+.debhelper/
+debhelper-build-stamp
+*.substvars
+debian/files
+debian/svent-artwork/
+__pycache__/
+*.pyc

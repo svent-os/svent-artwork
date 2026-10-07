@@ -1,0 +1,15 @@
+Source: svent-artwork
+Section: x11
+Priority: optional
+Maintainer: z1rov <fabian@zirov.net>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+
+Package: svent-artwork
+Architecture: all
+Depends: ${misc:Depends}
+Description: SventOS branding: wallpapers and logo
+ Installs the SventOS wallpapers to /usr/share/backgrounds/svent (landscape and
+ portrait) and the logo set to /usr/share/svent/logo. Shared by the XFCE and
+ bspwm sessions through the svent-wallpaper selector provided by svent-core.

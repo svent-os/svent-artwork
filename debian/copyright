@@ -1,0 +1,9 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: svent-artwork
+
+Files: *
+Copyright: 2026 z1rov
+License: SventOS-artwork
+ SventOS wallpapers and logo. Created by z1rov for SventOS.
+ Redistributed as part of SventOS. All rights reserved by the author unless a
+ different license is stated here.

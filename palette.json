@@ -1,0 +1,22 @@
+{
+  "name": "SventOS",
+  "default_appearance": "dark",
+  "colors": {
+    "base": "#0d1b2a",
+    "base_alt": "#13233b",
+    "surface": "#1b2b44",
+    "slate": "#2a3444",
+    "slate_dim": "#3a4658",
+    "accent": "#e23b3b",
+    "accent_deep": "#a8291f",
+    "text": "#e6edf3",
+    "text_dim": "#8b97a7"
+  },
+  "logo": {
+    "field_dark": "#0d1b2a",
+    "field_slate": "#2a3444",
+    "orca_body": "#1b2b44",
+    "orca_red": "#e23b3b",
+    "background_light": "#f3f6fb"
+  }
+}

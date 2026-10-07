@@ -1,0 +1,4 @@
+assets/backgrounds/svent/landscape/*.png usr/share/backgrounds/svent/landscape/
+assets/backgrounds/svent/portrait/*.png usr/share/backgrounds/svent/portrait/
+assets/logo/*.png usr/share/svent/logo/
+assets/logo/palette.json usr/share/svent/logo/
