@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+import argparse
+import base64
+import io
+import json
+import shutil
+import subprocess
+import tempfile
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+from PIL import Image, ImageOps, PngImagePlugin
+
+
+def export(source, root, svg_source=None, vector=False):
+    with Image.open(source) as original:
+        original.load()
+        if original.format != "PNG":
+            raise ValueError("The logo master must be a PNG image")
+        image = ImageOps.exif_transpose(original).convert("RGBA")
+    alpha = image.getchannel("A")
+    if alpha.getextrema()[0] == 255 or alpha.getbbox() is None:
+        raise ValueError("The logo master must contain visible artwork and a transparent background")
+    bounds = alpha.getbbox()
+    image = image.crop(bounds)
+    palette = json.loads((root / "palette.json").read_text(encoding="utf-8"))
+    destination = root / "assets/logo"
+    destination.mkdir(parents=True, exist_ok=True)
+    metadata = PngImagePlugin.PngInfo()
+    metadata.add_text("Author", "z1rov")
+    metadata.add_text("Copyright", "2026 z1rov")
+
+    def render(size):
+        scaled = ImageOps.contain(image, (round(size * 0.86), round(size * 0.86)), Image.Resampling.LANCZOS)
+        canvas = Image.new("RGBA", (size, size))
+        canvas.alpha_composite(scaled, ((size - scaled.width) // 2, (size - scaled.height) // 2))
+        return canvas
+
+    primary = render(1024)
+    primary.save(destination / "logo.png", pnginfo=metadata)
+    for name, color in (("white", "#ffffff"), ("black", "#000000")):
+        variant = Image.new("RGBA", primary.size, color)
+        variant.putalpha(primary.getchannel("A"))
+        variant.save(destination / f"logo-{name}.png", pnginfo=metadata)
+    for name, color in (("dark", palette["logo"]["field_dark"]), ("light", palette["logo"]["background_light"])):
+        variant = Image.new("RGBA", primary.size, color)
+        variant.alpha_composite(primary)
+        variant.convert("RGB").save(destination / f"logo-on-{name}.png", pnginfo=metadata)
+    for size in (16, 32, 48, 64, 128, 256):
+        render(size).save(destination / f"icon-{size}.png", pnginfo=metadata)
+    master = root / "logo/logo.svg"
+    master.parent.mkdir(parents=True, exist_ok=True)
+    if svg_source:
+        tree = ET.parse(svg_source)
+        if tree.getroot().tag.split("}")[-1] != "svg":
+            raise ValueError("The SVG master is invalid")
+        if Path(svg_source).resolve() != master.resolve():
+            shutil.copy2(svg_source, master)
+        print("Preserved the supplied vector SVG master")
+    elif vector:
+        if not shutil.which("potrace"):
+            raise ValueError("Install potrace to export a vector SVG")
+        with tempfile.TemporaryDirectory() as directory:
+            bitmap = Path(directory) / "logo.pbm"
+            primary.getchannel("A").point(lambda value: 0 if value >= 128 else 255).convert("1").save(bitmap)
+            subprocess.run(["potrace", "--svg", "--output", str(master), str(bitmap)], check=True)
+        tree = ET.parse(master)
+        root_element = tree.getroot()
+        root_element.set("width", "1024")
+        root_element.set("height", "1024")
+        root_element.set("viewBox", "0 0 1024 1024")
+        for element in root_element.iter():
+            if element.get("fill") == "#000000":
+                element.set("fill", palette["logo"]["orca_red"])
+        tree.write(master, encoding="utf-8", xml_declaration=True)
+        print("Traced the transparent logo silhouette to a vector SVG")
+    else:
+        buffer = io.BytesIO()
+        primary.save(buffer, format="PNG")
+        encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+        master.write_text(f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1024" viewBox="0 0 1024 1024"><image width="1024" height="1024" xlink:href="data:image/png;base64,{encoded}"/></svg>\n', encoding="utf-8")
+        print("Created an SVG containing the PNG artwork; this is not vector tracing")
+    print("Exported 11 SventOS logo variants")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("source", type=Path)
+    parser.add_argument("--svg-source", type=Path)
+    parser.add_argument("--vector", action="store_true")
+    arguments = parser.parse_args()
+    export(arguments.source, Path(__file__).resolve().parent.parent, arguments.svg_source, arguments.vector)

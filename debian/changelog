@@ -1,3 +1,12 @@
+svent-artwork (0.2.0) unstable; urgency=medium
+
+  * Add Currents, Balance and Tide wallpapers in light and dark 5K variants.
+  * Publish a wallpaper catalog and preserve legacy wallpaper paths.
+  * Validate image assets and stage the palette from a single source.
+  * Add logo export tooling and preserve PNG metadata when stamping.
+
+ -- z1rov <fabian@zirov.net>  Fri, 09 Oct 2026 23:59:50 -0500
+
 svent-artwork (0.1.0) unstable; urgency=medium
 
   * Initial SventOS artwork: wallpapers (orca, two-orcas, orca-waves; dark;

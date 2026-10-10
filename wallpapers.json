@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "default": "currents-dark",
+  "wallpapers": [
+    {"id": "currents-dark", "name": "Currents · Dark"},
+    {"id": "currents-light", "name": "Currents · Light"},
+    {"id": "balance-dark", "name": "Balance · Dark"},
+    {"id": "balance-light", "name": "Balance · Light"},
+    {"id": "tide-dark", "name": "Tide · Dark"},
+    {"id": "tide-light", "name": "Tide · Light"}
+  ],
+  "aliases": {
+    "orca-dark": "currents-dark",
+    "two-orcas-dark": "balance-dark",
+    "orca-waves-dark": "tide-dark",
+    "ridge-dark": "currents-dark"
+  }
+}

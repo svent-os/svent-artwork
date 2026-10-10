@@ -7,5 +7,6 @@ debhelper-build-stamp
 *.substvars
 debian/files
 debian/svent-artwork/
+debian/tmp/
 __pycache__/
 *.pyc

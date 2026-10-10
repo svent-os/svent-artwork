@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+import json
+import re
+import shutil
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+from PIL import Image
+
+
+def prepare(root, target):
+    catalog = json.loads((root / "wallpapers.json").read_text(encoding="utf-8"))
+    identifiers = [entry["id"] for entry in catalog["wallpapers"]]
+    if not identifiers or len(set(identifiers)) != len(identifiers) or catalog["default"] not in identifiers:
+        raise ValueError("Invalid wallpaper catalog")
+    for identifier in identifiers:
+        if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", identifier):
+            raise ValueError(f"Invalid wallpaper identifier: {identifier}")
+    for orientation, dimensions in (("landscape", (5120, 2880)), ("portrait", (2880, 5120))):
+        destination = target / "usr/share/backgrounds/svent" / orientation
+        destination.mkdir(parents=True, exist_ok=True)
+        for identifier in identifiers:
+            source = root / "assets/backgrounds/svent" / orientation / f"svent-{identifier}.png"
+            with Image.open(source) as image:
+                image.load()
+                if image.format != "PNG" or image.size != dimensions:
+                    raise ValueError(f"Invalid wallpaper dimensions or format: {source}")
+            shutil.copy2(source, destination / source.name)
+        for alias, identifier in catalog["aliases"].items():
+            if identifier not in identifiers or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", alias) or alias in identifiers:
+                raise ValueError(f"Invalid wallpaper alias: {alias}")
+            link = destination / f"svent-{alias}.png"
+            if link.is_symlink():
+                link.unlink()
+            link.symlink_to(f"svent-{identifier}.png")
+    artwork = target / "usr/share/svent/artwork"
+    artwork.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(root / "wallpapers.json", artwork / "wallpapers.json")
+    logo = target / "usr/share/svent/logo"
+    logo.mkdir(parents=True, exist_ok=True)
+    json.loads((root / "palette.json").read_text(encoding="utf-8"))
+    shutil.copy2(root / "palette.json", logo / "palette.json")
+    for source in sorted((root / "assets/logo").glob("*.png")):
+        if source.stat().st_size == 0:
+            raise ValueError(f"Empty logo asset: {source}. Run bin/export-logo first.")
+        with Image.open(source) as image:
+            image.load()
+            size = int(source.stem.split("-")[1]) if source.stem.startswith("icon-") else 1024
+            if image.format != "PNG" or image.size != (size, size):
+                raise ValueError(f"Invalid logo dimensions or format: {source}")
+        shutil.copy2(source, logo / source.name)
+    master = root / "logo/logo.svg"
+    if master.is_file():
+        if ET.parse(master).getroot().tag.split("}")[-1] != "svg":
+            raise ValueError("Invalid SVG logo master")
+        shutil.copy2(master, logo / "logo.svg")
+    if not list((root / "assets/logo").glob("*.png")):
+        print("Logo exports are pending. Run python3 bin/export-logo TRANSPARENT_LOGO.png before the final branding release.")
+    print(f"Prepared {len(identifiers)} wallpaper pairs and valid logo assets")
+
+
+if __name__ == "__main__":
+    prepare(Path(__file__).resolve().parent.parent, Path(sys.argv[1]))
