@@ -1,3 +1,10 @@
+svent-artwork (0.2.1) unstable; urgency=medium
+
+  * Reject incomplete logo exports before staging desktop branding assets.
+  * Keep the shared wallpaper catalog and legacy wallpaper aliases compatible.
+
+ -- z1rov <fabian@zirov.net>  Sat, 10 Oct 2026 00:00:00 -0500
+
 svent-artwork (0.2.0) unstable; urgency=medium
 
   * Add Currents, Balance and Tide wallpapers in light and dark 5K variants.
